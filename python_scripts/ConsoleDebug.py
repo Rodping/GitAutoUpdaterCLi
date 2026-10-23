@@ -15,5 +15,5 @@ def error(text):
 
 if __name__ == "__main__": 
     message("test message - test node")
-    warn("Very bad promblem - 2+2≠4")
+    warn("Very bad problem - 2+2≠4")
     error("Git not working")

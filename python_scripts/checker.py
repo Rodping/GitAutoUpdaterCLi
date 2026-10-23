@@ -3,7 +3,7 @@ import os
 try:
     import python_scripts.variables as variables
 except Exception as e:
-    print(f"Загрузка компонентів не пішла, помилка: {e}")
+    print(f"Loading components failed, error: {e}")
     import variables
 
 ORIGIN_DIR = ""
@@ -13,32 +13,32 @@ SCRIPTS_DIR = ""
 REPO_DIR = ""
 
 def python_file_check(_DIR, _TEMP_DIR):
-    pocet_celkem = 0
-    pocet_python = 0
+    total_files = 0
+    total_python_files = 0
     
-    # Читає всі папки та файли і копіює пайтон файли
-    for koren, podslozky, soubory in os.walk(_DIR):
-        for soubor in soubory:
-            pocet_celkem += 1
-            cesta_k_souboru = os.path.join(koren, soubor)
+    # Reads all folders and files and copies Python files
+    for root, subdirectories, files in os.walk(_DIR):
+        for file_name in files:
+            total_files += 1
+            file_path = os.path.join(root, file_name)
             
-            # 1. Kontrola přípony .py
-            if soubor.endswith('.py'):
-                print(f"[Python (.py)] {cesta_k_souboru}")
-                pocet_python += 1
+            # 1. Check .py extension
+            if file_name.endswith('.py'):
+                print(f"[Python (.py)] {file_path}")
+                total_python_files += 1
             else:
                 continue
 
             MyPathlib = os.path
-            # 2. Зберігання файлів .py
+            # 2. Store .py files
             try:
-                # відкриє скрипт .py
-                with open(cesta_k_souboru, 'r', encoding='utf-8') as r:
+                # Open the .py script
+                with open(file_path, 'r', encoding='utf-8') as r:
                     
-                    text = r.read() # Читає скріпт і записує
+                    text = r.read() # Reads the script and writes it
                     
-                    rel_cesta_v_temp = os.path.relpath(cesta_k_souboru, start=_DIR)
-                    temp_file_folder = os.path.join(_TEMP_DIR, rel_cesta_v_temp)
+                    rel_path_in_temp = os.path.relpath(file_path, start=_DIR)
+                    temp_file_folder = os.path.join(_TEMP_DIR, rel_path_in_temp)
                     temp_file_dir = os.path.dirname(temp_file_folder)
                     if temp_file_dir:
                         os.makedirs(temp_file_dir, exist_ok=True)
@@ -48,12 +48,12 @@ def python_file_check(_DIR, _TEMP_DIR):
                     
 
             except Exception:
-                # Přeskočení binárních souborů, chyb přístupu apod.
+                # Skip binary files, access errors, etc.
                 continue
-            # 3 čtení
+            # 3 read
     print("-" * 40)
-    print(f"Celkem zkontrolováno souborů: {pocet_celkem}")
-    print(f"Z toho Python souborů: {pocet_python}")
+    print(f"Total files checked: {total_files}")
+    print(f"Python files among them: {total_python_files}")
 
 def get_directories():
     global ORIGIN_DIR, TEMP_DIR, TEMP_FILE, TEMP_FILE_NAME, CONTENT_DIR, SCRIPTS_DIR, REPO_DIR, Directories
@@ -66,7 +66,7 @@ def get_directories():
 
 
 if __name__ == "__main__":
-    print("Запуск копіювання...\n")
+    print("Starting copy...\n")
     get_directories()
 
     python_file_check(ORIGIN_DIR, TEMP_DIR)

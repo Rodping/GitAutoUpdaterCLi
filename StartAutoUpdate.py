@@ -11,13 +11,13 @@ import time
 import git
 # import sys
 # from readkeys import getkey 
-# import keyboard # Тільки для компютерів
+# import keyboard # Only for computers
 """
 
-StarterServer.py заавжди мусить бути в папці /PlastHub/, 
-бо інакше, весь все ламаєтся
+StarterServer.py must always be in the /PlastHub/ folder,
+otherwise the whole system breaks.
 
-Назви папок:
+Folder names:
 ----------------------------------------
 origin_dir, temp_dir, content_dir, scripts_dir, repo_dir
 global ORIGIN_DIR, TEMP_DIR, TEMP_FILE, TEMP_FILE_NAME, CONTENT_DIR, SCRIPTS_DIR, REPO_DIR, Directories
@@ -51,11 +51,11 @@ input_text = ""
 input_text_final = ""
 ###########################
 
-ORIGIN_DIR = path.dirname(__file__) # - Самотній сервер, або папка сервера
+ORIGIN_DIR = path.dirname(__file__) # - Standalone server, or server folder
 REPO_DIR = ""
 SCRIPTS_DIR = path.join(ORIGIN_DIR, "python-scripts")
 
-print(color_text_fore("Папка серверу: ", "green") + ORIGIN_DIR)
+print(color_text_fore("Server folder: ", "green") + ORIGIN_DIR)
 vybrana_vetev = ""
 
 def wait_for_input(question, timeout: int = 10):
@@ -72,7 +72,7 @@ def wait_for_input(question, timeout: int = 10):
     while time.time() - start_time < timeout:
         if input_received:
             break
-        time.sleep(0.1) # Krátká pauza, aby smyčka zbytečně nezatěžovala procesor
+        time.sleep(0.1) # Short pause to avoid unnecessary CPU load
     waiting_for_input = False
     return input_text
 
@@ -92,9 +92,9 @@ def wait_for_input_deamon(question):
 def get_parent_directory():
     global ORIGIN_DIR, REPO_DIR, waiting_for_input
 
-    # 1. Вибери папку для збереження
+    # 1. Choose a folder to save to
 
-    text_for_dir_quest = (r"Задай дорогу к папці (нічого не напишеш, тоді збереження о '..\repo\' )"+
+    text_for_dir_quest = (r"Specify the path to the folder (if you leave it empty, it will save to '..\repo\' )" +
                            "\n------> ")
     REPO_DIR = wait_for_input(text_for_dir_quest, timeout = 10)
     
@@ -106,37 +106,37 @@ def get_parent_directory():
         REPO_DIR = repo
     elif(not REPO_DIR):
         # ORIGIN_DIR = os.path.dirname(__file__) --- PlastHub/
-        print(color_text_fore("Не можу розпізнати папку, використовою папку сайта!!!", "red"))
+        print(color_text_fore("I cannot determine the folder, so I am using the website folder!!!", "red"))
         REPO_DIR = path.join(ORIGIN_DIR)
-    print(color_text_fore("\nВикористовую папку: ", "green") + REPO_DIR)
+    print(color_text_fore("\nUsing folder: ", "green") + REPO_DIR)
 
 def select_branch():
     global REPO_DIR, vybrana_vetev
-    # 2. Вибери вітку для копіюівння
+    # 2. Choose the branch to copy
     try:
-        # 0. Перевірка чи це є дійсний репо
+        # 0. Check whether this is a valid repository
         if not os.path.exists(os.path.join(REPO_DIR, ".git")):
-            ConsoleDebug.message("Порожня папка: Репозиторіц не існує. Я пропускаю вибір гілок і дозволяю репозиторію завантажуватися.")
+            ConsoleDebug.message("Empty folder: repository does not exist. I am skipping branch selection and allowing the repository to download.")
             vybrana_vetev = ""
             return
-        # --- Фікс безпечної безпеки Гіту на Андройд  ---
+        # --- Git safe.directory fix for Android ---
         subprocess.run(["git", "config", "--global", "--add", "safe.directory", REPO_DIR], check=False)
         # -----------------------------------------------
 
-        # 1. Otevření existujícího repozitáře (zadejte cestu k vašemu projektu)
+        # 1. Open an existing repository (enter the path to your project)
         repo = git.Repo(REPO_DIR)
 
-        # 2. Výpis všech lokálních větví
-        print(color_text_fore("Доступні вітки:", "green"))
+        # 2. Print all local branches
+        print(color_text_fore("Available branches:", "green"))
         branches = [branch.name for branch in repo.branches]
         for i, branch in enumerate(branches):
             print(f"    {i + 1}. {branch}")
 
-        # 3. Zobrazení aktuálně aktivní větve
-        print(f"\nАктивна вітка: {repo.active_branch.name}")
+        # 3. Show the currently active branch
+        print(f"\nActive branch: {repo.active_branch.name}")
 
-        # 4. Výběr a přepnutí na větev
-        branch_choice = wait_for_input(color_text_fore("Виберіть поточну гілку: ", "green"), timeout = 10)
+        # 4. Select and switch to a branch
+        branch_choice = wait_for_input(color_text_fore("Select the current branch: ", "green"), timeout = 10)
         branch_choice = branch_choice.strip() if branch_choice else ""
 
         if not branch_choice:
@@ -149,29 +149,29 @@ def select_branch():
             if 0 <= branch_index < len(branches):
                 vybrana_vetev = branches[branch_index]
             else:
-                ConsoleDebug.warn("Неправильне число гілки, використовую активну гілку.")
+                ConsoleDebug.warn("Invalid branch number, using the active branch.")
                 vybrana_vetev = repo.active_branch.name
         elif branch_choice in branches:
             vybrana_vetev = branch_choice
         else:
-            ConsoleDebug.warn("Невідома гілка, використовую активну гілку.")
+            ConsoleDebug.warn("Unknown branch, using the active branch.")
             vybrana_vetev = repo.active_branch.name
 
-        print(f"\nПереключаю на вітку: {vybrana_vetev}")
+        print(f"\nSwitching to branch: {vybrana_vetev}")
 
-        # Provedení samotného checkoutu
+        # Perform the checkout itself
         repo.git.checkout(vybrana_vetev)
-        print(color_text_fore("Вітка успішно вибрана!", "green"))
+        print(color_text_fore("Branch selected successfully!", "green"))
     
 
     except subprocess.CalledProcessError as e:
-        ConsoleDebug.error(f"Chyba při spouštění příkazu git: {e}")
+        ConsoleDebug.error(f"Error while running git command: {e}")
     except FileNotFoundError:
-        ConsoleDebug.error("Git nebyl v systému nalezen. Ujistěte se, že je správně nainstalovaný.")
+        ConsoleDebug.error("Git was not found in the system. Make sure it is installed correctly.")
     except TypeError:
-        ConsoleDebug.error("Použil jsi asi string místo intengera.")
+        ConsoleDebug.error("You probably used a string instead of an integer.")
     except Exception as e:
-        ConsoleDebug.error(f"Nastala neočekávaná chyba: {e}")
+        ConsoleDebug.error(f"An unexpected error occurred: {e}")
 
 if __name__ == "__main__": 
     time.sleep(3)
@@ -180,5 +180,5 @@ if __name__ == "__main__":
     select_branch()
     auto_git_update.get_directories()
 
-    print(color_text_fore("Запуск авто-оновлення репозиторію...\n", "green"))
+    print(color_text_fore("Starting repository auto-update...\n", "green"))
     auto_git_update.start(vybrana_vetev, 200)

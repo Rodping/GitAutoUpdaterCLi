@@ -2,7 +2,7 @@ import json
 import os
 import time
 
-# Základní proměnné projektu
+# Basic project variables
 ORIGIN_DIR = ""
 TEMP_DIR = ""
 CONTENT_DIR = ""
@@ -14,7 +14,7 @@ TEMP_FILE = ""
 
 
 class TempVariables:
-    """Jednoduchá třída pro uložení a načtení proměnných projektu na disk."""
+    """Simple class for saving and loading project variables to disk."""
     
     def __init__(self, origin_dir=None, repo_dir=None, file_name="temp_variables.json"):
         self.ORIGIN_DIR = self._detect_origin_dir()
@@ -22,16 +22,16 @@ class TempVariables:
         self._storage_file_name = file_name
         self._storage_file = None
         self._setup_directories()
-        # 1. Спочатку загрузити старші дані з диску
+        # 1. First load previous data from disk
         self.load_from_disk()
-        # 2. Аж ТЕПЕР використовувати параметри із сучасного бізу і з тим переписати старі дані
+        # 2. Only now use the current values and overwrite the old data with them
         if origin_dir:
             self.ORIGIN_DIR = origin_dir
         if repo_dir:
             self.REPO_DIR = repo_dir
         elif not hasattr(self, 'REPO_DIR'):
             self.REPO_DIR = self.ORIGIN_DIR
-        # 3. Зберешти відразу новий і правильний стан
+        # 3. Save the new correct state immediately
         self.save_to_disk()
 
     def _detect_origin_dir(self):
@@ -56,7 +56,7 @@ class TempVariables:
             if os.path.isfile(file_path):
                 os.remove(file_path)
         except OSError as exc:
-            print(f"Chyba při mazání souboru {file_path}: {exc}")
+            print(f"Error deleting file {file_path}: {exc}")
         return file_path
 
     def save_to_disk(self):
@@ -75,8 +75,8 @@ class TempVariables:
         file_path = self._resolve_storage_file()
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
         self.remove_storage_file()
-        with open(file_path, "w", encoding="utf-8") as soubor:
-            json.dump(payload, soubor, ensure_ascii=False, indent=4)
+        with open(file_path, "w", encoding="utf-8") as file:
+            json.dump(payload, file, ensure_ascii=False, indent=4)
         return file_path
 
     def load_from_disk(self):
@@ -85,10 +85,10 @@ class TempVariables:
             return None
 
         try:
-            with open(file_path, "r", encoding="utf-8") as soubor:
-                payload = json.load(soubor)
+            with open(file_path, "r", encoding="utf-8") as file:
+                payload = json.load(file)
         except (json.JSONDecodeError, OSError) as exc:
-            print(f"Chyba při načítání souboru {file_path}: {exc}")
+            print(f"Error loading file {file_path}: {exc}")
             return None
 
         for key, value in payload.items():
