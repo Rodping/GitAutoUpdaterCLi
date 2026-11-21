@@ -13,7 +13,7 @@ except Exception as e:
     import variables
 # --- SETTINGS ---
 # SSH URL (recommended) or HTTPS URL with a token
-REPO_URL = "https://github.com/Rodping/PLastHub.git"
+REPO_URL = "https://github.com/vitalets/github-trending-repos.git"
 ORIGIN_DIR = ""
 TEMP_DIR = ""
 CONTENT_DIR = ""

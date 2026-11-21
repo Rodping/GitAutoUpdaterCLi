@@ -1,3 +1,4 @@
+import argparse
 import os
 import subprocess
 from python_scripts import auto_git_update_5min as auto_git_update
@@ -38,7 +39,7 @@ Directories.REPO_DIR = REPO_DIR
 
 """
 ########## func ###########
-def color_text_fore(text: str, color: str):
+def color_text_foreground(text: str, color: str):
     color_code = getattr(Fore, color.upper(), Fore.WHITE)
     return(color_code + text + Style.RESET_ALL)
 
@@ -51,12 +52,12 @@ input_text = ""
 input_text_final = ""
 ###########################
 
-ORIGIN_DIR = path.dirname(__file__) # - Standalone server, or server folder
+ORIGIN_DIR = path.dirname(__file__) # - Origin root folder, where the StarterServer.py is located
 REPO_DIR = ""
 SCRIPTS_DIR = path.join(ORIGIN_DIR, "python-scripts")
 
-print(color_text_fore("Server folder: ", "green") + ORIGIN_DIR)
-vybrana_vetev = ""
+print(color_text_foreground("Server folder: ", "green") + ORIGIN_DIR)
+selected_branch = ""
 
 def wait_for_input(question, timeout: int = 10):
     global waiting_for_input, input_received, input_text
@@ -89,45 +90,59 @@ def wait_for_input_deamon(question):
     except EOFError:
         pass
 
-def get_parent_directory():
-    global ORIGIN_DIR, REPO_DIR, waiting_for_input
+def get_parent_directory(test_mode=False):
+    global ORIGIN_DIR, REPO_DIR
 
     # 1. Choose a folder to save to
+    if test_mode:
+        print(color_text_foreground("Test mode enabled: using local repo folder.", "yellow"))
+        REPO_DIR = path.join(ORIGIN_DIR, "local-test-repo")
+        os.makedirs(REPO_DIR, exist_ok=True)
+    else:
+        with open(os.path.join(ORIGIN_DIR, "config.txt"), "r") as config_file:
+            config_lines = config_file.readlines()
+            for line in config_lines:
+                if line.startswith("REPO_DIR="):
+                    configured_repo_dir = line.split("=", 1)[1].strip()
+                    local_path = configured_repo_dir.replace("\\", "/")
+                    if local_path == "local":
+                        REPO_DIR = ORIGIN_DIR
+                    elif local_path.startswith("local/"):
+                        local_subpath = local_path[len("local/"):]
+                        REPO_DIR = path.join(ORIGIN_DIR, *local_subpath.split("/"))
+                    else:
+                        REPO_DIR = configured_repo_dir
+                    break
+        #text_for_dir_quest = (r"Specify the path to the folder (if you leave it empty, it will save to '..\repo\' )" +
+        #                       "\n------> ")
+        #REPO_DIR = wait_for_input(text_for_dir_quest, timeout = 10)
+    
+    
+    if(not REPO_DIR):
+        # ORIGIN_DIR = os.path.dirname(__file__) 
+        print(color_text_foreground("Cannot determine the folder, so I am using the test folder!!!", "red"))
+        REPO_DIR = path.join(ORIGIN_DIR, "local-test-repo")
 
-    text_for_dir_quest = (r"Specify the path to the folder (if you leave it empty, it will save to '..\repo\' )" +
-                           "\n------> ")
-    REPO_DIR = wait_for_input(text_for_dir_quest, timeout = 10)
-    
-    
-    if(REPO_DIR == "test" or os.path.isfile(os.path.join(ORIGIN_DIR, "TEST"))):
-        
-        repo = path.join(ORIGIN_DIR, "repo")
-        os.makedirs(repo, exist_ok=True)
-        REPO_DIR = repo
-    elif(not REPO_DIR):
-        # ORIGIN_DIR = os.path.dirname(__file__) --- PlastHub/
-        print(color_text_fore("I cannot determine the folder, so I am using the website folder!!!", "red"))
-        REPO_DIR = path.join(ORIGIN_DIR)
-    print(color_text_fore("\nUsing folder: ", "green") + REPO_DIR)
+    print(color_text_foreground("\nUsing folder: ", "green") + REPO_DIR)
 
 def select_branch():
-    global REPO_DIR, vybrana_vetev
+    global REPO_DIR, selected_branch
     # 2. Choose the branch to copy
     try:
         # 0. Check whether this is a valid repository
         if not os.path.exists(os.path.join(REPO_DIR, ".git")):
             ConsoleDebug.message("Empty folder: repository does not exist. I am skipping branch selection and allowing the repository to download.")
-            vybrana_vetev = ""
+            selected_branch = ""
             return
         # --- Git safe.directory fix for Android ---
-        subprocess.run(["git", "config", "--global", "--add", "safe.directory", REPO_DIR], check=False)
+        git.Git().config("--global", "--add", "safe.directory", REPO_DIR)
         # -----------------------------------------------
 
         # 1. Open an existing repository (enter the path to your project)
         repo = git.Repo(REPO_DIR)
 
         # 2. Print all local branches
-        print(color_text_fore("Available branches:", "green"))
+        print(color_text_foreground("Available branches:", "green"))
         branches = [branch.name for branch in repo.branches]
         for i, branch in enumerate(branches):
             print(f"    {i + 1}. {branch}")
@@ -136,32 +151,32 @@ def select_branch():
         print(f"\nActive branch: {repo.active_branch.name}")
 
         # 4. Select and switch to a branch
-        branch_choice = wait_for_input(color_text_fore("Select the current branch: ", "green"), timeout = 10)
+        branch_choice = wait_for_input(color_text_foreground("Select the current branch: ", "green"), timeout = 15)
         branch_choice = branch_choice.strip() if branch_choice else ""
 
         if not branch_choice:
             if "main" in branches:
-                vybrana_vetev = "main"
+                selected_branch = "main"
             else:
-                vybrana_vetev = repo.active_branch.name
+                selected_branch = repo.active_branch.name
         elif branch_choice.isdigit():
             branch_index = int(branch_choice) - 1
             if 0 <= branch_index < len(branches):
-                vybrana_vetev = branches[branch_index]
+                selected_branch = branches[branch_index]
             else:
                 ConsoleDebug.warn("Invalid branch number, using the active branch.")
-                vybrana_vetev = repo.active_branch.name
+                selected_branch = repo.active_branch.name
         elif branch_choice in branches:
-            vybrana_vetev = branch_choice
+            selected_branch = branch_choice
         else:
             ConsoleDebug.warn("Unknown branch, using the active branch.")
-            vybrana_vetev = repo.active_branch.name
+            selected_branch = repo.active_branch.name
 
-        print(f"\nSwitching to branch: {vybrana_vetev}")
+        print(f"\nSwitching to branch: {selected_branch}")
 
         # Perform the checkout itself
-        repo.git.checkout(vybrana_vetev)
-        print(color_text_fore("Branch selected successfully!", "green"))
+        repo.git.checkout(selected_branch)
+        print(color_text_foreground("Branch selected successfully!", "green"))
     
 
     except subprocess.CalledProcessError as e:
@@ -174,11 +189,16 @@ def select_branch():
         ConsoleDebug.error(f"An unexpected error occurred: {e}")
 
 if __name__ == "__main__": 
+    parser = argparse.ArgumentParser(description="Start the repository auto-updater.")
+    parser.add_argument("-test", "--test", action="store_true",
+                        help="use the local repo folder instead of prompting for a path")
+    args = parser.parse_args()
+
     time.sleep(3)
-    get_parent_directory()
+    get_parent_directory(test_mode=args.test)
     variables.get_temp_variables(origin_dir=ORIGIN_DIR, repo_dir=REPO_DIR)
     select_branch()
     auto_git_update.get_directories()
 
-    print(color_text_fore("Starting repository auto-update...\n", "green"))
-    auto_git_update.start(vybrana_vetev, 200)
+    print(color_text_foreground("Starting repository auto-update...\n", "green"))
+    auto_git_update.start(selected_branch, 200)
