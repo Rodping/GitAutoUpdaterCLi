@@ -201,4 +201,4 @@ if __name__ == "__main__":
     auto_git_update.get_directories()
 
     print(color_text_foreground("Starting repository auto-update...\n", "green"))
-    auto_git_update.start(selected_branch, 200)
+    auto_git_update.start(selected_branch, 200, test_mode=args.test)

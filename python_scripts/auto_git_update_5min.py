@@ -1,9 +1,12 @@
+from importlib.resources import path
 import os
+from os import path
 import subprocess
 import time
 import threading
 from colorama import Fore, Back, Style
 import git
+
 try:
     import python_scripts.checker as checker
     import python_scripts.variables as variables
@@ -14,6 +17,7 @@ except Exception as e:
 # --- SETTINGS ---
 # SSH URL (recommended) or HTTPS URL with a token
 REPO_URL = "https://github.com/vitalets/github-trending-repos.git"
+test_REPO_URL = "https://github.com/vitalets/github-trending-repos.git"
 ORIGIN_DIR = ""
 TEMP_DIR = ""
 CONTENT_DIR = ""
@@ -31,6 +35,19 @@ actual_branch = ""
 # Interval in seconds (5 minutes = 300 seconds)
 
 ########## func ###########
+def get_repo_url(test_mode=False):
+    global REPO_URL
+
+    if test_mode:
+        REPO_URL = test_REPO_URL
+    else:
+        with open(os.path.join(ORIGIN_DIR, "config.txt"), "r") as config_file:
+            config_lines = config_file.readlines()
+            for line in config_lines:
+                if line.startswith("REPO_URL="):
+                    configured_repo_url = line.split("=", 1)[1].strip()
+                    REPO_URL = configured_repo_url
+                    break
 def color_text_fore(text: str, color: str):
     color_code = getattr(Fore, color.upper(), Fore.WHITE)
     return(color_code + text + Style.RESET_ALL)
@@ -74,10 +91,11 @@ def update_repo(TARGET_DIR, selected_branch):
 
 
 
-def start(branch, interval=300):
+def start(branch, interval=300,test_mode=False):
     # import variables
     global ORIGIN_DIR, isrunning, REPO_DIR, actual_branch, cycle_count
 
+    get_repo_url(test_mode=test_mode)
     INTERVAL = interval
     actual_branch = branch
     TempVars = variables.get_temp_variables(origin_dir=ORIGIN_DIR or None, repo_dir=REPO_DIR or None)
