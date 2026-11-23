@@ -90,7 +90,9 @@ class TempVariables:
     def load_from_disk(self):
         file_path = self._resolve_storage_file()
         path = os.path
-        if path.getmtime(self.CONFIG_FILE) > path.getmtime(file_path) or not os.path.isfile(file_path):
+        if not path.isfile(file_path):
+            return None
+        if path.isfile(self.CONFIG_FILE) and path.getmtime(self.CONFIG_FILE) > path.getmtime(file_path):
             return None
         try:
             with open(file_path, "r", encoding="utf-8") as file:
