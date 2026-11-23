@@ -14,6 +14,6 @@ def error(text):
     print(Fore.RED + f"Error! (from {os.path.basename(caller.filename)} line {caller.lineno}): " + text + Style.RESET_ALL)
 
 if __name__ == "__main__": 
-    message("test message - test node")
+    message("TEST MESSAGES: ")
     warn("Very bad problem - 2+2≠4")
-    error("Git not working")
+    error("System isnt working")

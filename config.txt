@@ -1,0 +1,2 @@
+REPO_DIR=local/local-test-repo
+REPO_URL=https://github.com/vitalets/github-trending-repos

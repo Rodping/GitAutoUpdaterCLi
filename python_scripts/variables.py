@@ -1,7 +1,13 @@
 import json
 import os
 import time
+try:
+    import python_scripts.ConsoleDebug as ConsoleDebug
+except Exception as e:
+    print(f"Loading components failed, error: {e}")
+    import ConsoleDebug
 
+# region variables
 # Basic project variables
 ORIGIN_DIR = ""
 TEMP_DIR = ""
@@ -12,7 +18,9 @@ REPO_DIR = ""
 TEMP_FILE_NAME = "temp_variables.json"
 TEMP_FILE = ""
 
+# endregion
 
+# region - TmpVar class
 class TempVariables:
     """Simple class for saving and loading project variables to disk."""
     
@@ -42,6 +50,7 @@ class TempVariables:
         self.TEMP_DIR = path.join(self.ORIGIN_DIR, "temp")
         self.CONTENT_DIR = path.join(self.ORIGIN_DIR, "content")
         self.SCRIPTS_DIR = path.join(self.ORIGIN_DIR, "python_scripts")
+        self.CONFIG_FILE = path.join(self.ORIGIN_DIR, "config.txt")
         os.makedirs(self.TEMP_DIR, exist_ok=True)
         self._storage_file = path.join(self.TEMP_DIR, self._storage_file_name)
 
@@ -74,21 +83,22 @@ class TempVariables:
 
         file_path = self._resolve_storage_file()
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        self.remove_storage_file()
         with open(file_path, "w", encoding="utf-8") as file:
             json.dump(payload, file, ensure_ascii=False, indent=4)
         return file_path
-
+    # MARK: - load_from_disk
     def load_from_disk(self):
         file_path = self._resolve_storage_file()
-        if not os.path.isfile(file_path):
+        path = os.path
+        if not path.isfile(file_path):
             return None
-
+        if path.isfile(self.CONFIG_FILE) and path.getmtime(self.CONFIG_FILE) > path.getmtime(file_path):
+            return None
         try:
             with open(file_path, "r", encoding="utf-8") as file:
                 payload = json.load(file)
         except (json.JSONDecodeError, OSError) as exc:
-            print(f"Error loading file {file_path}: {exc}")
+            ConsoleDebug.error(f"loading file {file_path}: {exc}")
             return None
 
         for key, value in payload.items():
@@ -130,8 +140,9 @@ class TempVariables:
         for key, value in dirs.items():
             output += f"  {key}: {value}\n"
         return output
+# endregion
 
-
+# region - Shared vars
 _SHARED_TEMP_VARIABLES = None
 
 
@@ -162,6 +173,7 @@ def set_temp_value(name, value):
 def get_temp_value(name, default=None):
     return get_temp_variables().get_value(name, default)
 
+# endregion
 
 if __name__ == "__main__":
     tv = TempVariables()

@@ -12,5 +12,5 @@ if __name__ == "__main__":
             sys.path.remove(ORIGIN_DIR)
 
     StartAutoUpdate.select_branch()
-    vybrana_vetev = StartAutoUpdate.vybrana_vetev
-    auto_git_update.update_repo(ORIGIN_DIR, vybrana_vetev)
+    selected_branch = StartAutoUpdate.selected_branch
+    auto_git_update.update_repo(ORIGIN_DIR, selected_branch)
