@@ -1,6 +1,5 @@
 # GitdaterCLi [GitAutoUpdaterCLi]
 
-
 <p align="center">
   <a href="https://github.com/noctalia-dev/noctalia/commits">
     <img src="https://img.shields.io/github/last-commit/Rodping/GitdaterCLi?style=for-the-badge&labelColor=FFF59B&color=FFF59B&logo=git&logoColor=070722&label=commit" alt="Last commit" />
